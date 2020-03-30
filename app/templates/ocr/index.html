@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script>
+        function show_selected_filename(input) {
+            const label = input.nextElementSibling, labelVal = label.innerHTML;
+
+            input.addEventListener('change', function (e) {
+                let fileName = '';
+                if (this.files && this.files.length > 1)
+                    fileName = (this.getAttribute('data-multiple-caption') || '').replace('{count}', this.files.length);
+
+                if (fileName)
+                    label.querySelector('span').innerHTML = fileName;
+                else
+                    label.innerHTML = labelVal;
+            });
+        }
+
+        var inputs = document.querySelectorAll('.inputfile');
+        Array.prototype.forEach.call(inputs, function (input) {
+            const label = input.nextElementSibling, labelVal = label.innerHTML;
+
+            input.addEventListener('change', function (e) {
+                let fileName = '';
+                if (this.files && this.files.length > 1)
+                    fileName = (this.getAttribute('data-multiple-caption') || '').replace('{count}', this.files.length);
+
+                if (fileName)
+                    label.querySelector('span').innerHTML = fileName;
+                else
+                    label.innerHTML = labelVal;
+            });
+        });
+
+    </script>
+    <script>
+
+        let response;
+
+        function showOn() {
+
+			document.getElementById("overlay").style.display = "block";
+
+			//get the input and the file
+			const input = document.querySelector('input[type=file]');
+			const file = input.files[0];
+
+			//Creates the FormData object and attach to a key name "file"
+			let fd = new FormData();
+			fd.append("file", file);
+
+			let xhr = new XMLHttpRequest();
+			xhr.open("POST", "http://127.0.0.1:5000/ocr/upload_and_return_json", true);
+			xhr.onloadend = function(e) {
+				//The response of de upload
+				console.log("successfully in callback------------------");
+				response = JSON.parse(xhr.responseText);
+
+				showResult();
+
+				console.log(response);
+
+				document.getElementById("lblName").innerHTML=response.name;
+				document.getElementById("lblCountry").innerHTML=response.country;
+
+                let expNewFormat = response.expiration_date.replace(/(\d\d)(\d\d)(\d\d)/, '$3/$2/$1');
+                document.getElementById("lblExp").innerHTML=expNewFormat;
+
+                let dobNewFormat = response.date_of_birth.replace(/(\d\d)(\d\d)(\d\d)/, '$3/$2/$1');
+                document.getElementById("lblDOB").innerHTML=dobNewFormat;
+
+				document.getElementById("lblPN").innerHTML=response.number;
+
+				document.getElementById("overlay").style.display = "none";
+			}
+			xhr.send(fd);
+
+        }
+
+        function off() {
+            document.getElementById("overlay").style.display = "none";
+
+        }
+
+		function resetResult() {
+			document.getElementById("resultRegion").style.display = "none";
+		}
+
+		function showResult() {
+            document.getElementById("resultRegion").style.display = "block";
+        }
+
+
+		function readURL(input) {
+
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+
+                reader.onload = function (e) {
+                    $('#imgholder')
+                        .attr('src', e.target.result);
+                };
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+    </script>
+
+
+	<style>
+	#resultRegion{
+		display: none;
+	}
+	</style>
+</head>
+
+<body>
+
+    <h1>
+        ID Reader
+    </h1>
+
+    <div id="overlay" onclick="off()">
+        <p1>Loading...</p1>
+    </div>
+
+    <div id="get input">
+        <h3 class="sectionHeading">Upload your document</h3>
+        <p class="pInfo">Select your picture below and click on upload option.</p>
+
+        <form enctype = "multipart/form-data">
+            <input type="file" name="file" id="file" onclick="resetResult()" onchange="readURL(this);"
+                   class="inputfile" data-multiple-caption="{count} files selected"
+            />
+
+            <label for="file">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="17" viewBox="0 0 20 17">
+                    <path d="M10 0l-5.2 4.9h3.3v5.1h3.8v-5.1h3.3l-5.2-4.9zm9.3 11.5l-3.2-2.1h-2l3.4 2.6h-3.5c-.1 0-.2.1-.2.1l-.8 2.3h-6l-.8-2.2c-.1-.1-.1-.2-.2-.2h-3.6l3.4-2.6h-2l-3.2 2.1c-.4.3-.7 1-.6 1.5l.6 3.1c.1.5.7.9 1.2.9h16.3c.6 0 1.1-.4 1.3-.9l.6-3.1c.1-.5-.2-1.2-.7-1.5z" />
+                </svg>
+                <span>Choose a file&hellip;</span>
+            </label>
+
+            <button class="btn" type="button" onClick="showOn()">
+                Upload
+            </button>
+        </form>
+    </div>
+
+    <p>-----------------------------------------------------------------------------</p>
+
+    <div class="contentarea">
+        <div class="contentpanel">
+			<div id="resultRegion">
+                <div class="fiftypercent">
+                    <h3 class="sectionHeading">Verify your details</h3>
+                    <img id="imgholder" src="../static/images/passport.jpg" style="width:100%;">
+                </div>
+
+                <div class="fiftypercent">
+                    <h3 class="sectionHeading">&nbsp;</h3>
+
+                    <label>Name:</label><br>
+                    <label class="value" id="lblName" contenteditable="true">Jhon Doe</label>
+
+                    <label>Country:</label><br>
+                    <label class="value" id="lblCountry" contenteditable="true"></label>
+
+                    <label>Date of birth:</label><br>
+                    <label class="value" id="lblDOB" contenteditable="true">31/05/1980</label>
+
+                    <label>Expiry:</label><br>
+                    <label class="value" id="lblExp" contenteditable="true"></label>
+
+                    <label>Passport Number</label><br>
+                    <label class="value" id="lblPN" contenteditable="true">KZ12345678</label>
+                </div>
+			</div>
+        </div>
+    </div>
+	{% block body %}
+
+    {% endblock %}
+</body>
+
+</html>
